@@ -5,6 +5,8 @@ from skimage import measure
 from scipy.spatial.transform import Rotation
 from typing import Optional
 
+from fit_beziers import bezier_cubic
+
 def velocity(st: float, ct: float, sf: float, cf: float, t: float) -> float:
     """Compute velocity ratio for control points."""
     acc = (st - sf / 16.0) * (ct - cf)
@@ -259,21 +261,6 @@ def prepare_controls(
     left_y = knots[k+1][1] - (delta_y[k] * cf - delta_x[k] * sf) * ss
     return [(right_x, right_y), (left_x, left_y)]
 
-def cubic_bezier(
-    P0: tuple[float, float],
-    P1: tuple[float, float],
-    P2: tuple[float, float],
-    P3: tuple[float, float],
-    num_points: int = 60,
-) -> list[tuple[float, float]]:
-    """Calculate points on a cubic Bezier curve."""
-    points = []
-    for t in np.linspace(0, 1, num_points):
-        x = (1 - t)**3 * P0[0] + 3 * (1 - t)**2 * t * P1[0] + 3 * (1 - t) * t**2 * P2[0] + t**3 * P3[0]
-        y = (1 - t)**3 * P0[1] + 3 * (1 - t)**2 * t * P1[1] + 3 * (1 - t) * t**2 * P2[1] + t**3 * P3[1]
-        points.append((x, y))
-    return points
-
 def sample_curve_all_segments(
     knots: list[tuple[float, float]],
     control_points: list[tuple[float, float]],
@@ -281,12 +268,13 @@ def sample_curve_all_segments(
 ) -> np.ndarray:
     pts = []
     m = len(knots) - 1
+    t = np.linspace(0.0, 1.0, samples_per_seg)
     for i in range(m):
-        P0 = knots[i]
-        P1 = control_points[2*i]
-        P2 = control_points[2*i+1]
-        P3 = knots[i+1]
-        seg = cubic_bezier(P0, P1, P2, P3, num_points=samples_per_seg)
+        P0 = np.asarray(knots[i], dtype=float)
+        P1 = np.asarray(control_points[2*i], dtype=float)
+        P2 = np.asarray(control_points[2*i+1], dtype=float)
+        P3 = np.asarray(knots[i+1], dtype=float)
+        seg = bezier_cubic(P0, P1, P2, P3, t)
         pts.extend(seg)
     return np.array(pts)
 

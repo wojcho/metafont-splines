@@ -22,7 +22,7 @@ def bezier_cubic(
 
 def chord_length_param(points: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
     """
-    Parameterization (stable)
+    Stable parameterization
     """
     d = np.linalg.norm(points[1:] - points[:-1], axis=1)
     s = np.concatenate([[0], np.cumsum(d)])
@@ -32,7 +32,7 @@ def chord_length_param(points: np.ndarray[np.float64]) -> np.ndarray[np.float64]
 
 def fit_cubic(points: np.ndarray[np.float64], t: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
     """
-    Initial cubic fit (linear least squares)
+    Initial cubic fit with linear least squares
     """
     P0, P3 = points[0], points[-1]
 
@@ -98,29 +98,6 @@ def fit_curve(
         fit_curve(left, error_tol, depth+1, max_depth) +
         fit_curve(right, error_tol, depth+1, max_depth)
     )
-
-def reparameterize(
-    points: np.ndarray[np.float64],
-    curve: np.ndarray[np.float64],
-    t: np.ndarray[np.float64],
-) -> np.ndarray[np.float64]:
-    # project each point onto curve (simple fixed-point iteration)
-    C = bezier_cubic(curve[0], curve[1], curve[2], curve[3], t)
-
-    # local adjustment based on arc direction
-    for i in range(len(t)):
-        # gradient approximation
-        eps = 1e-5
-        t1 = min(1, t[i] + eps)
-        t0 = max(0, t[i] - eps)
-
-        d = bezier_cubic(*curve, np.array([t1])) - bezier_cubic(*curve, np.array([t0]))
-        dp = C[i] - points[i]
-
-        denom = np.dot(d[0], d[0]) + 1e-8
-        t[i] -= np.dot(dp, d[0]) / denom
-
-    return np.clip(t, 0, 1)
 
 def beziers_to_svg_path(
     beziers: Sequence[np.ndarray[np.float64]],
