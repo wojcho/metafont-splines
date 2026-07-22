@@ -93,11 +93,8 @@ def from_knots_to_svg_one_curve(
 if __name__ == "__main__":
     knots = [
         (0, 0),
-        (1, 1),
-        (2, 0),
-        (3, 1),
-        (3, 0),
-        (0, 0),
+        (1, 0),
+        (0, 1),
     ]
     outline_centerline: MetafontOutlineCenterline = from_knots_to_svg_one_curve(knots)
     print(outline_centerline.curve_path)

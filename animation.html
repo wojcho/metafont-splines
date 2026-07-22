@@ -2,113 +2,234 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Gradient reveal along path</title>
+<title>Multiple reveal curves</title>
 
 <style>
-html,body{
-    margin:0;
-    height:100%;
-    display:grid;
-    place-items:center;
-    background:#1a1a1a;
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: #1a1a1a;
 }
 
-svg{
-    width:900px;
-    height:500px;
+svg {
+    width: 900px;
+    height: 500px;
 }
 </style>
 </head>
 <body>
 
-<svg viewBox="0 0 900 500">
-
-    <defs>
-
-        <!-- Color that will be revealed -->
-        <linearGradient id="grad"
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="0%">
-            <stop offset="0%" stop-color="#ff3b3b"/>
-            <stop offset="35%" stop-color="#ffdb4d"/>
-            <stop offset="65%" stop-color="#36ff89"/>
-            <stop offset="100%" stop-color="#2b7fff"/>
-        </linearGradient>
-
-        <!-- Animated mask -->
-        <mask id="paintMask" >
-
-            <!-- black = hidden -->
-            <rect width="100%" height="100%" fill="black"/>
-
-            <!-- white stroke = revealed -->
-            <path id="brush"
-                  d="
-                  M100 260
-                  C180 80,
-                   320 420,
-                   430 220
-                  S640 120,
-                   800 280"
-                  fill="none"
-                  stroke="white"
-                  stroke-width="80"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"/>
-
-        </mask>
-
-    </defs>
-
-    <!-- background -->
-    <rect width="100%" height="100%" fill="#252525"/>
-
-    <!-- gradient hidden by animated mask -->
-    <rect width="100%"
-          height="100%"
-          fill="url(#grad)"
-          mask="url(#paintMask)"/>
-
-    <!-- optional guide -->
-    <path
-        d="M100 260
-           C180 80,
-            320 420,
-            430 220
-           S640 120,
-            800 280"
-        fill="none"
-        stroke="#ffffff22"
-        stroke-width="2"/>
-
-</svg>
+<svg id="svg" viewBox="-50 -140 420 300"></svg>
 
 <script>
+const curves = [
+    {
+        centerline: "M 0.00 0.00 C -44.26 65.64, 34.36 144.26, 100.00 100.00 C 146.31 68.77, 131.97 -14.44, 200.00 0.00 C 246.43 9.85, 255.51 111.03, 300.00 100.00 C 331.90 92.09, 337.77 37.17, 300.00 0.00 C 216.77 -81.90, 83.23 -81.90, 0.00 0.00",
+        outlines: [
+            "M 80.07 123.12 C 139.25 117.01, 138.32 46.23, 174.66 14.57 C 242.27 -12.11, 237.47 93.96, 291.30 109.92 C 305.41 115.75, 322.48 108.95, 329.98 95.98 C 337.40 83.92, 338.56 68.99, 336.33 55.28 C 291.20 -84.98, 73.62 -117.09, -15.76 -2.01 C -23.23 12.21, -25.88 28.92, -22.85 44.72 C -18.72 66.73, -5.19 85.95, 11.43 100.50 C 29.91 116.88, 55.13 127.50, 80.07 123.12 Z",
+            "M 62.21 100.66 C 44.75 103.82, 25.13 99.85, 12.04 87.38 C 1.94 76.41, -2.29 60.92, -1.64 46.23 C -1.08 33.64, 3.44 21.44, 10.37 10.98 C 87.97 -72.46, 255.51 -75.07, 312.35 31.16 C 316.25 44.93, 316.28 60.48, 309.46 73.37 C 303.85 84.47, 290.35 92.74, 277.93 88.45 C 248.65 47.18, 220.09 -34.10, 154.18 -7.17 C 116.70 22.72, 119.86 93.24, 62.21 100.66 Z",
+        ]
+    },
+    {
+        centerline: "M 0.00 0.00 C 23.94 -35.39, 76.06 -35.39, 100.00 0.00 C 144.42 65.65, 65.65 144.42, 0.00 100.00",
+        outlines: [
+            "M 61.38 123.12 C 72.66 121.21, 83.41 116.52, 92.64 109.79 C 170.43 59.70, 87.05 -73.96, 8.36 -28.68 C 0.60 -23.86, -6.46 -17.46, -11.10 -9.55 C -9.19 0.05, -0.22 9.05, 9.36 11.11 C 16.74 2.87, 24.63 -6.17, 35.45 -10.38 C 44.22 -14.28, 53.98 -15.95, 63.55 -15.17 C 72.07 -14.42, 80.72 -11.95, 87.63 -6.74 C 136.31 47.29, 53.51 134.04, -3.68 90.73 C -5.79 89.62, -9.01 87.61, -10.95 89.95 C -1.32 116.76, 34.94 126.91, 61.38 123.12 Z",
+        ]
+    }
+];
 
-const path = document.getElementById("brush");
-const length = path.getTotalLength();
+const svg = document.getElementById("svg");
 
-path.style.strokeDasharray = length;
-path.style.strokeDashoffset = length;
+svg.innerHTML = `
+<defs>
 
-let start = null;
+<linearGradient id="grad"
+    x1="0%"
+    y1="0%"
+    x2="100%"
+    y2="0%">
+
+    <stop offset="0%" stop-color="#ff3b3b"/>
+    <stop offset="35%" stop-color="#ffdb4d"/>
+    <stop offset="65%" stop-color="#36ff89"/>
+    <stop offset="100%" stop-color="#2b7fff"/>
+
+</linearGradient>
+
+</defs>
+
+<rect
+    x="-1000"
+    y="-1000"
+    width="2000"
+    height="2000"
+    fill="#252525"/>
+
+<g id="allCurves"></g>
+
+<g id="guides"></g>
+`;
+
+const defs = svg.querySelector("defs");
+const allCurves = document.getElementById("allCurves");
+const guides = document.getElementById("guides");
+
+const brushes = [];
+
+curves.forEach((curve, index) => {
+
+    //-----------------------------------
+    // mask
+    //-----------------------------------
+
+    const mask = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "mask"
+    );
+
+    mask.id = `mask-${index}`;
+
+    const bg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "rect"
+    );
+
+    bg.setAttribute("x", "-1000");
+    bg.setAttribute("y", "-1000");
+    bg.setAttribute("width", "2000");
+    bg.setAttribute("height", "2000");
+    bg.setAttribute("fill", "black");
+
+    mask.appendChild(bg);
+
+    const brush = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+    );
+
+    brush.setAttribute("d", curve.centerline);
+    brush.setAttribute("fill", "none");
+    brush.setAttribute("stroke", "white");
+    brush.setAttribute("stroke-width", "35");
+    brush.setAttribute("stroke-linecap", "round");
+    brush.setAttribute("stroke-linejoin", "round");
+
+    const length = brush.getTotalLength();
+
+    brush.style.strokeDasharray = length;
+    brush.style.strokeDashoffset = length;
+
+    mask.appendChild(brush);
+
+    defs.appendChild(mask);
+
+    brushes.push(brush);
+
+
+    //-----------------------------------
+    // revealed content
+    //-----------------------------------
+
+    const group = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
+    );
+
+    group.setAttribute("mask", `url(#mask-${index})`);
+
+    // colored outline
+    const first = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+    );
+
+    first.setAttribute("d", curve.outlines[0]);
+    first.setAttribute("fill", "url(#grad)");
+
+    group.appendChild(first);
+
+    // erase remaining outlines
+    for (let i = 1; i < curve.outlines.length; i++) {
+
+        const p = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+        );
+
+        p.setAttribute("d", curve.outlines[i]);
+        p.setAttribute("fill", "#252525");
+
+        group.appendChild(p);
+    }
+
+    allCurves.appendChild(group);
+
+    //-----------------------------------
+    // optional guide
+    //-----------------------------------
+
+    const guide = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+    );
+
+    guide.setAttribute("d", curve.centerline);
+    guide.setAttribute("fill", "none");
+    guide.setAttribute("stroke", "#ffffff22");
+    guide.setAttribute("stroke-width", "1.5");
+
+    guides.appendChild(guide);
+
+});
+
 const duration = 3000;
 
-function animate(t){
+function animateBrush(brush) {
 
-    if(!start) start = t;
+    return new Promise(resolve => {
 
-    const p = Math.min((t-start)/duration,1);
+        const length = brush.getTotalLength();
 
-    path.style.strokeDashoffset = length*(1-p);
+        let start;
 
-    if(p<1)
-        requestAnimationFrame(animate);
+        function frame(time) {
+
+            if (start === undefined)
+                start = time;
+
+            const progress = Math.min(
+                (time - start) / duration,
+                1
+            );
+
+            brush.style.strokeDashoffset =
+                length * (1 - progress);
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                resolve();
+            }
+        }
+
+        requestAnimationFrame(frame);
+
+    });
+
 }
 
-requestAnimationFrame(animate);
+async function run() {
+
+    for (const brush of brushes) {
+        await animateBrush(brush);
+    }
+
+}
+
+run();
 
 </script>
 
