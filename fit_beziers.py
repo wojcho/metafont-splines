@@ -95,8 +95,8 @@ def fit_curve(
         return [curve]
 
     return (
-        fit_curve(left, error_tol, depth+1, max_depth) +
-        fit_curve(right, error_tol, depth+1, max_depth)
+        fit_curve(left, error_tol, depth + 1, max_depth) +
+        fit_curve(right, error_tol, depth + 1, max_depth)
     )
 
 def beziers_to_svg_path(

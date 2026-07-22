@@ -14,7 +14,7 @@ class MetafontOutlineCenterline:
 def from_knots_to_svg_one_curve(
     knots: list[tuple[float, float]],
     *,
-    ellipse_angle_deg: float = 45,
+    ellipse_angle_deg: float = -45,
     ellipse_semi_major: float = 0.15,
     ellipse_semi_minor: float = 0.05,
     outline_fit_error: float = 1e-3,

@@ -51,7 +51,9 @@ def make_choices(
     if tensions is None:
         tensions = [(1.0, 1.0)] * n
     if curls is None:
-        curls = [(1.0, 1.0)] if n == 1 else [(1.0, 1.0)] + [(None, None)] * (n-1) + [(1.0, 1.0)]
+        curls = [(None, None)] * (n + 1)
+        curls[0] = (1.0, 1.0)
+        curls[-1] = (1.0, 1.0)
     if directions is None:
         directions = [(None, None)] * (n + 1)
 
