@@ -32,7 +32,7 @@ def chord_length_param(points: np.ndarray[np.float64]) -> np.ndarray[np.float64]
 
 def fit_cubic(points: np.ndarray[np.float64], t: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
     """
-    Initial cubic fit with linear least squares
+    Initial cubic fit with least squares
     """
     P0, P3 = points[0], points[-1]
 
