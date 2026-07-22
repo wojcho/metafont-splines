@@ -3,6 +3,7 @@ from scipy.spatial import cKDTree
 import math
 from skimage import measure
 from scipy.spatial.transform import Rotation
+from typing import Optional
 
 def velocity(st: float, ct: float, sf: float, cf: float, t: float) -> float:
     """Compute velocity ratio for control points."""
@@ -17,13 +18,18 @@ def velocity(st: float, ct: float, sf: float, cf: float, t: float) -> float:
         result = num / denom
     return result
 
-def n_arg(x: float, y: float):
+def n_arg(x: float, y: float) -> float:
     """Calculate angle of vector (x,y) in degrees."""
     if x == 0 and y == 0:
         return 0
     return math.degrees(math.atan2(y, x))
 
-def make_choices(knots, tensions=None, curls=None, directions=None):
+def make_choices(
+    knots: list[tuple[float, float]],
+    tensions: Optional[list[tuple[float, float]]] = None,
+    curls: Optional[list[tuple[Optional[float], Optional[float]]]] = None,
+    directions: Optional[list[tuple[Optional[float], Optional[float]]]] = None,
+) -> list[tuple[float, float]]:
     """Calculate control points for Hobby's spline."""
     n = len(knots) - 1
     if n < 1:
@@ -211,7 +217,7 @@ def make_choices(knots, tensions=None, curls=None, directions=None):
         control_points.append((left_x, left_y))
     return control_points
 
-def curl_ratio(gamma, a_tension, b_tension):
+def curl_ratio(gamma: float, a_tension: float, b_tension: float) -> float:
     """Calculate curl ratio for endpoint equations."""
     alpha = 1.0 / a_tension
     beta = 1.0 / b_tension
@@ -230,7 +236,13 @@ def curl_ratio(gamma, a_tension, b_tension):
         num = gamma * (3 - alpha) + beta
     return min(num / denom, 4.0) if denom != 0 else 4.0
 
-def prepare_controls(knots, k, theta, phi, tension):
+def prepare_controls(
+    knots: list[tuple[float, float]],
+    k: int,
+    theta: float,
+    phi: float,
+    tension: tuple[float, float],
+) -> list[tuple[float, float]]:
     """Set control points for a single segment."""
     st = math.sin(math.radians(theta))
     ct = math.cos(math.radians(theta))
@@ -247,7 +259,13 @@ def prepare_controls(knots, k, theta, phi, tension):
     left_y = knots[k+1][1] - (delta_y[k] * cf - delta_x[k] * sf) * ss
     return [(right_x, right_y), (left_x, left_y)]
 
-def cubic_bezier(P0, P1, P2, P3, num_points=60):
+def cubic_bezier(
+    P0: tuple[float, float],
+    P1: tuple[float, float],
+    P2: tuple[float, float],
+    P3: tuple[float, float],
+    num_points: int = 60,
+) -> list[tuple[float, float]]:
     """Calculate points on a cubic Bezier curve."""
     points = []
     for t in np.linspace(0, 1, num_points):
@@ -256,7 +274,11 @@ def cubic_bezier(P0, P1, P2, P3, num_points=60):
         points.append((x, y))
     return points
 
-def sample_curve_all_segments(knots, control_points, samples_per_seg=200):
+def sample_curve_all_segments(
+    knots: list[tuple[float, float]],
+    control_points: list[tuple[float, float]],
+    samples_per_seg: int = 200,
+) -> np.ndarray:
     pts = []
     m = len(knots) - 1
     for i in range(m):
@@ -268,12 +290,21 @@ def sample_curve_all_segments(knots, control_points, samples_per_seg=200):
         pts.extend(seg)
     return np.array(pts)
 
-def distance_field_from_samples(samples, query_points, shape):
+def distance_field_from_samples(
+    samples: np.ndarray,
+    query_points: np.ndarray,
+    shape: tuple[int, int],
+) -> np.ndarray:
     tree = cKDTree(samples)
     dists, _ = tree.query(query_points, k=1)
     return dists.reshape(shape)
 
-def extract_iso_contours(XX, YY, field, level):
+def extract_iso_contours(
+    XX: np.ndarray,
+    YY: np.ndarray,
+    field: np.ndarray,
+    level: float,
+) -> list[np.ndarray]:
     """
     Return list of contours as arrays of (x,y) coordinates for iso-distance=level.
     Uses pixel coordinates -> map to XY coordinates using XX, YY mesh.
@@ -297,12 +328,20 @@ def extract_iso_contours(XX, YY, field, level):
         result.append(pts)
     return result
 
-def affine_transform_points(points, matrix, translation=np.zeros(2)):
+def affine_transform_points(
+    points: list[tuple[float, float]] | np.ndarray,
+    matrix: np.ndarray,
+    translation: np.ndarray = np.zeros(2),
+) -> np.ndarray:
     """Apply 2D affine transform: p -> M p + t"""
     pts = np.array(points)
     return (pts @ matrix.T) + translation
 
-def make_ellipse_transform(angle_deg: float, semi_major: float, semi_minor: float):
+def make_ellipse_transform(
+    angle_deg: float,
+    semi_major: float,
+    semi_minor: float,
+) -> tuple[np.ndarray, np.ndarray]:
     """Returns T and T_inv (2x2 matrices)"""
     theta = np.radians(angle_deg)
     c, s = np.cos(theta), np.sin(theta)
@@ -312,21 +351,31 @@ def make_ellipse_transform(angle_deg: float, semi_major: float, semi_minor: floa
     T_inv = np.linalg.inv(T)
     return T, T_inv
 
-def bounds_from_knots(knots, pad=1.0):
+def bounds_from_knots(
+    knots: list[tuple[float, float]],
+    pad: float = 1.0,
+) -> tuple[float, float, float, float]:
     pts = np.asarray(knots)
     xmin, ymin = pts.min(axis=0)
     xmax, ymax = pts.max(axis=0)
     return xmin - pad, ymin - pad, xmax + pad, ymax + pad
 
 def find_df_and_contours(
-        knots,
-        ellipse_angle_deg=45,
-        ellipse_semi_major=0.15,
-        ellipse_semi_minor=0.05,
-        grid_x_samples=300,
-        grid_y_samples=200,
-        grid_padding=1.0
-    ):
+    knots: list[tuple[float, float]],
+    ellipse_angle_deg: float = 45,
+    ellipse_semi_major: float = 0.15,
+    ellipse_semi_minor: float = 0.05,
+    grid_x_samples: int = 300,
+    grid_y_samples: int = 200,
+    grid_padding: float = 1.0,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    list[float],
+    list[tuple[float, float]],
+    np.ndarray,
+    list[np.ndarray],
+]:
     # Prepare distance field for known knots, and find contours
     # Make a curve, inverse transform, find distance field and contours, forward transform
     T, T_inv = make_ellipse_transform(angle_deg=ellipse_angle_deg, semi_major=ellipse_semi_major, semi_minor=ellipse_semi_minor) # Transform matrices
