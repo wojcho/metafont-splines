@@ -7,7 +7,7 @@ def bezier_cubic(
     P2: np.ndarray[np.float64],
     P3: np.ndarray[np.float64],
     t: np.ndarray[np.float64] | Sequence[float],
-):
+) -> np.ndarray[np.float64]:
     """
     Bezier evaluation
     """
@@ -125,7 +125,7 @@ def reparameterize(
 def beziers_to_svg_path(
     beziers: Sequence[np.ndarray[np.float64]],
     precision: int=3
-):
+) -> str:
     """
     Convert list of cubic Bezier control point arrays to an SVG path string.
     beziers: list of 4x2 arrays or sequences: [ [P0,P1,P2,P3], ... ]
