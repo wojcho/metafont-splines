@@ -309,7 +309,7 @@ def extract_iso_contours(
     Return list of contours as arrays of (x,y) coordinates for iso-distance=level.
     Uses pixel coordinates -> map to XY coordinates using XX, YY mesh.
     """
-    # skimage expects image with origin at top-left; our XX/YY follow matplotlib (origin='lower')
+    # skimage expects image with origin at top-left; our XX/YY follow matplotlib (origin="lower")
     # so pass field as-is but remember rows correspond to y-grid.
     contours = measure.find_contours(field, level=level)
     result = []
@@ -382,7 +382,7 @@ def find_df_and_contours(
     xmin, ymin, xmax, ymax = bounds_from_knots(knots, pad=grid_padding)
     x_grid = np.linspace(xmin, xmax, grid_x_samples)
     y_grid = np.linspace(ymin, ymax, grid_y_samples)
-    XX, YY = np.meshgrid(x_grid, y_grid, indexing='xy')
+    XX, YY = np.meshgrid(x_grid, y_grid, indexing="xy")
     grid_points = np.column_stack([XX.ravel(), YY.ravel()])
     grid_points_t = affine_transform_points(grid_points, T_inv)
     XX_t = grid_points_t[:,0].reshape(XX.shape)
@@ -420,9 +420,9 @@ import matplotlib.pyplot as plt
 
 # Plot distance field (unsigned)
 plt.figure(figsize=(8, 5))
-plt.imshow(field_t, origin='lower', extent=extent, cmap='viridis')
-plt.colorbar(label='Elipse-Distance')
-plt.title('Ellipse-space distance field to Hobby spline')
+plt.imshow(field_t, origin="lower", extent=extent, cmap="viridis")
+plt.colorbar(label="Elipse-Distance")
+plt.title("Ellipse-space distance field to Hobby spline")
 
 # Plot sampled curve points
 samples = sample_curve_all_segments(
@@ -431,23 +431,23 @@ samples = sample_curve_all_segments(
     samples_per_seg=400
 )
 sx, sy = samples[:, 0], samples[:, 1]
-plt.plot(sx, sy, color='red', linewidth=1)
+plt.plot(sx, sy, color="red", linewidth=1)
 
 # Plot contours
 for pts in contours:
-    plt.plot(pts[:,0], pts[:,1], color='red', linewidth=1.5)
+    plt.plot(pts[:,0], pts[:,1], color="red", linewidth=1.5)
 
 # Plot knots and control points
 kx, ky = zip(*knots)
 cp = np.asarray(control_points)
-plt.plot(kx, ky, 'ro', markersize=5)
+plt.plot(kx, ky, "ro", markersize=5)
 if cp.size:
-    plt.plot(cp[:, 0], cp[:, 1], 'go', markersize=4)
+    plt.plot(cp[:, 0], cp[:, 1], "go", markersize=4)
 
 # Plot labels, constraints, aspect ratio
-plt.xlabel('x')
-plt.ylabel('y')
+plt.xlabel("x")
+plt.ylabel("y")
 plt.xlim(extent[0], extent[1])
 plt.ylim(extent[2], extent[3])
-plt.gca().set_aspect('equal', adjustable='box')
+plt.gca().set_aspect("equal", adjustable="box")
 plt.show()
