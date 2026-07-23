@@ -22,7 +22,7 @@ ALPHABET_TO_KNOTS: dict[str, list[list[tuple[float, float]]]] = {
     "v": [[(0.9, 0.2), (0.7, 0.6), (0.9, 1)], [(0.9, 1), (0.6, 0.9), (0.3, 1.4), (0.6, 1.5), (1, 1.5)]],
 
     "a": [[(0, -0.5), (0.2, -0.3), (0.4, -0.5)], [(0.4, -0.5), (0.6, -0.3), (1, -0.5)]],
-    "e": [[(0, -0.3), (0.5, -0.3), (1, -0.5)], [(0.4, -0.6), (0.5, -0.4)]],
+    "e": [[(0, -0.3), (0.5, -0.3), (1, -0.5)], [(1, -0.5), (0.5, -0.5), (0.4, -0.4)]],
     "i": [[(0, -0.3), (0.5, -0.3), (1, -0.5)]],
     "o": [[(0, -0.5), (0.2, -0.5), (0.4, -0.3)], [(0.4, -0.3), (0.6, -0.5), (1, -0.5)]],
     "u": [[(0, -0.3), (0.5, -0.5), (1, -0.5)]],
@@ -98,7 +98,7 @@ def text_to_svg_path_d(text: str) -> list[MetafontOutlineCenterline]:
     return outline_centerlines_lists
 
 if __name__ == "__main__":
-    outline_centerlines_lists = text_to_svg_path_d("mnjv")
+    outline_centerlines_lists = text_to_svg_path_d("meaneijeuvee")
     pseudo_json = []
     for outline_centerlines in outline_centerlines_lists:
         pseudo_json.append({ "centerline": outline_centerlines.curve_path, "outlines": outline_centerlines.outline_paths })
