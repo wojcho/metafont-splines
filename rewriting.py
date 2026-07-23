@@ -98,7 +98,7 @@ def text_to_svg_path_d(text: str) -> list[MetafontOutlineCenterline]:
     return outline_centerlines_lists
 
 if __name__ == "__main__":
-    outline_centerlines_lists = text_to_svg_path_d("meaneijeuvee")
+    outline_centerlines_lists = text_to_svg_path_d("sample")
     pseudo_json = []
     for outline_centerlines in outline_centerlines_lists:
         pseudo_json.append({ "centerline": outline_centerlines.curve_path, "outlines": outline_centerlines.outline_paths })
